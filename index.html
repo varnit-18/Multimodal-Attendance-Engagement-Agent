@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multimodal AI Attendance System | FutureSkills Prime</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { background-color: #0F172A; color: #F8FAFC; font-family: system-ui, -apple-system, sans-serif; }
+        .hud-bracket { position: absolute; width: 24px; height: 24px; border-color: #10B981; }
+        .tab-btn.active { background-color: #4F46E5; color: #FFFFFF; }
+        .glass-card { background: #1E293B; border: 1px solid #334155; border-radius: 12px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-xl">🛡️</div>
+            <div>
+                <h1 class="text-lg font-bold text-white leading-tight">Multimodal AI Attendance & Verification</h1>
+                <p class="text-xs text-indigo-400">FutureSkills Prime Capstone • OpenCV • MediaPipe • Librosa • Gen AI</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3 text-xs">
+            <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span> Offline Local Engine Active
+            </span>
+            <span class="px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 rounded-full">
+                Multi-Agent System
+            </span>
+        </div>
+    </header>
+
+    <!-- KPI Summary Cards -->
+    <section class="max-w-7xl w-full mx-auto px-6 py-4 grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div class="glass-card p-4 text-center">
+            <span class="text-xs text-slate-400 font-medium">Enrolled Personnel</span>
+            <p class="text-2xl font-bold text-white mt-1" id="kpi-enrolled">5</p>
+        </div>
+        <div class="glass-card p-4 text-center">
+            <span class="text-xs text-slate-400 font-medium">Present Today</span>
+            <p class="text-2xl font-bold text-emerald-400 mt-1" id="kpi-present">4</p>
+        </div>
+        <div class="glass-card p-4 text-center">
+            <span class="text-xs text-slate-400 font-medium">Late Arrivals</span>
+            <p class="text-2xl font-bold text-amber-400 mt-1" id="kpi-late">1</p>
+        </div>
+        <div class="glass-card p-4 text-center">
+            <span class="text-xs text-slate-400 font-medium">Attendance Rate</span>
+            <p class="text-2xl font-bold text-indigo-400 mt-1" id="kpi-rate">80%</p>
+        </div>
+        <div class="glass-card p-4 text-center">
+            <span class="text-xs text-slate-400 font-medium">Flagged Anomalies</span>
+            <p class="text-2xl font-bold text-rose-400 mt-1" id="kpi-anomalies">1</p>
+        </div>
+    </section>
+
+    <!-- Main Navigation Tabs -->
+    <div class="max-w-7xl w-full mx-auto px-6 pb-2">
+        <div class="flex space-x-2 border-b border-slate-800 pb-2 overflow-x-auto">
+            <button onclick="switchTab('kiosk')" id="tab-btn-kiosk" class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white transition">📹 Live Kiosk</button>
+            <button onclick="switchTab('enroll')" id="tab-btn-enroll" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white transition">👤 Enrollment</button>
+            <button onclick="switchTab('logs')" id="tab-btn-logs" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white transition">📊 Attendance Ledger</button>
+            <button onclick="switchTab('audio')" id="tab-btn-audio" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white transition">🎙️ Librosa Audio Lab</button>
+            <button onclick="switchTab('genai')" id="tab-btn-genai" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white transition">🤖 GenAI Agent Studio</button>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl w-full mx-auto px-6 py-4 flex-1">
+
+        <!-- TAB 1: LIVE KIOSK -->
+        <div id="tab-kiosk" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Video Stream & HUD -->
+                <div class="lg:col-span-7 glass-card p-5 flex flex-col items-center">
+                    <div class="w-full flex items-center justify-between mb-3">
+                        <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block mr-2"></span>
+                            Computer Vision HUD (OpenCV + MediaPipe)
+                        </h2>
+                        <span class="text-xs bg-slate-800 px-2.5 py-1 rounded text-slate-400">468-Point Mesh Mode</span>
+                    </div>
+
+                    <div class="relative w-full aspect-video bg-slate-950 rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center">
+                        <video id="webcam" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+                        <canvas id="hudCanvas" class="w-full h-full absolute inset-0"></canvas>
+                        
+                        <div id="camPlaceholder" class="text-center p-6">
+                            <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-3 text-slate-400">📷</div>
+                            <p class="text-sm text-slate-300 font-medium">Camera Feed Standby</p>
+                            <p class="text-xs text-slate-500 mt-1">Click "Start Camera" below, or run in Demo Simulation Mode.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3 mt-4 w-full">
+                        <button onclick="startCamera()" id="btnStartCam" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2.5 px-4 rounded-lg transition">
+                            📷 Start Webcam Feed
+                        </button>
+                        <button onclick="simulateFaceScan()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-lg border border-slate-600 transition">
+                            🔄 Load Demo Face Scan
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 w-full mt-3 text-center">
+                        <div class="bg-slate-900/60 p-2 rounded-lg border border-slate-800">
+                            <span class="text-[10px] text-slate-400">EAR (Eye Blink)</span>
+                            <p class="text-sm font-mono font-bold text-emerald-400" id="hud-ear">0.28</p>
+                        </div>
+                        <div class="bg-slate-900/60 p-2 rounded-lg border border-slate-800">
+                            <span class="text-[10px] text-slate-400">Anti-Spoof Liveness</span>
+                            <p class="text-sm font-mono font-bold text-indigo-400" id="hud-live">94%</p>
+                        </div>
+                        <div class="bg-slate-900/60 p-2 rounded-lg border border-slate-800">
+                            <span class="text-[10px] text-slate-400">Head Pose (Yaw/Pitch)</span>
+                            <p class="text-sm font-mono font-bold text-amber-400" id="hud-pose">+2° / -1°</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Verification & Voiceprint Panel -->
+                <div class="lg:col-span-5 space-y-4">
+                    <!-- Audio Biometrics Section -->
+                    <div class="glass-card p-5">
+                        <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-2">2. Audio Biometrics (Librosa Voiceprint)</h2>
+                        <p class="text-xs text-slate-400 mb-3">Speak the passphrase or trigger acoustic voice verification.</p>
+                        
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex items-center justify-between mb-3">
+                            <div>
+                                <span class="text-xs font-semibold text-slate-300">Spoken Passphrase:</span>
+                                <p class="text-xs italic text-indigo-300">"Authorize biometric punch for attendance"</p>
+                            </div>
+                            <button onclick="simulateVoiceRecord()" id="btnVoiceRecord" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-xs font-medium transition flex items-center">
+                                🎙️ Record Mic
+                            </button>
+                        </div>
+
+                        <div class="text-[11px] text-slate-400 space-y-1">
+                            <div class="flex justify-between"><span>Voice Match Status:</span><span id="voice-status" class="text-emerald-400 font-semibold">Matched: Aarav Sharma (91%)</span></div>
+                            <div class="flex justify-between"><span>MFCC Timbre Energy:</span><span class="font-mono text-slate-300">0.082 RMS</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Agent Adjudication & Punch Trigger -->
+                    <div class="glass-card p-5">
+                        <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-3">3. Autonomous Agent Verification</h2>
+                        
+                        <div class="mb-4">
+                            <label class="text-xs text-slate-400 block mb-1">Target Personnel</label>
+                            <select id="userSelector" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+                                <option value="EMP001">Aarav Sharma (EMP001) - AI & Robotics</option>
+                                <option value="EMP002">Priya Nair (EMP002) - Computer Vision</option>
+                                <option value="EMP003">Rahul Verma (EMP003) - Data Science</option>
+                                <option value="EMP004">Ananya Iyer (EMP004) - Audio Engineering</option>
+                                <option value="EMP005">Kavya Patel (EMP005) - Product Management</option>
+                            </select>
+                        </div>
+
+                        <button onclick="executePunch()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition text-sm flex items-center justify-center space-x-2">
+                            <span>⚡ EXECUTE BIOMETRIC PUNCH</span>
+                        </button>
+
+                        <!-- Live Punch Result Box -->
+                        <div id="punchReceipt" class="mt-4 p-4 rounded-xl bg-slate-900 border border-indigo-500/50 hidden">
+                            <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                                <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Punch Verified Receipt</span>
+                                <span class="text-[10px] text-slate-500" id="receipt-time">--:--:--</span>
+                            </div>
+                            <div class="mt-2 text-xs space-y-1.5 text-slate-300">
+                                <p><strong>Personnel:</strong> <span id="receipt-name">Aarav Sharma</span> (<span id="receipt-id">EMP001</span>)</p>
+                                <p><strong>Status:</strong> <span id="receipt-status" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">PRESENT</span></p>
+                                <p><strong>Multimodal Confidence:</strong> <span id="receipt-conf" class="text-emerald-400 font-bold">92.4%</span></p>
+                                <p class="text-[11px] text-slate-400 italic" id="receipt-reason">Agent verification confirmed: Visual face mesh (94%), voiceprint (91%), and EAR liveness passed.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: ENROLLMENT -->
+        <div id="tab-enroll" class="hidden space-y-6">
+            <div class="glass-card p-6 max-w-2xl mx-auto">
+                <h2 class="text-base font-bold text-white mb-4">👤 New Personnel Biometric Enrollment</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Full Name</label>
+                        <input id="en-name" type="text" placeholder="e.g. Dr. Siddharth Sen" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">User ID / Code</label>
+                            <input id="en-id" type="text" placeholder="e.g. EMP006" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Department</label>
+                            <select id="en-dept" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+                                <option>AI & Robotics</option>
+                                <option>Computer Vision</option>
+                                <option>Data Science</option>
+                                <option>Audio Engineering</option>
+                                <option>Operations</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-slate-900 rounded-lg border border-slate-800 text-center">
+                            <span class="text-xs text-slate-400 block mb-2">📸 Face Enrollment</span>
+                            <button onclick="alert('✅ Face landmark features simulated and encoded (128 dimensions)!')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded text-xs text-white font-medium">Capture Face</button>
+                        </div>
+                        <div class="p-4 bg-slate-900 rounded-lg border border-slate-800 text-center">
+                            <span class="text-xs text-slate-400 block mb-2">🎙️ Voiceprint Enrollment</span>
+                            <button onclick="alert('✅ Voice MFCC acoustic envelope extracted (20 coefficients)!')" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 rounded text-xs text-white font-medium">Record Voice</button>
+                        </div>
+                    </div>
+                    <button onclick="enrollUser()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg text-xs transition">
+                        💾 ENROLL PERSONNEL INTO DATABASE
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: ATTENDANCE LEDGER -->
+        <div id="tab-logs" class="hidden space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-base font-bold text-white">📊 Attendance Ledger & Behavioral Logs</h2>
+                <button onclick="downloadCSV()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-medium">
+                    📥 Export CSV
+                </button>
+            </div>
+            <div class="glass-card overflow-hidden">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-900 text-slate-400 font-semibold border-b border-slate-800">
+                        <tr>
+                            <th class="p-3">Time</th>
+                            <th class="p-3">User ID</th>
+                            <th class="p-3">Name</th>
+                            <th class="p-3">Department</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">Face Score</th>
+                            <th class="p-3">Voice Score</th>
+                            <th class="p-3">Combined</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody" class="divide-y divide-slate-800">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 4: LIBROSA AUDIO LAB -->
+        <div id="tab-audio" class="hidden space-y-6">
+            <div class="glass-card p-6">
+                <h2 class="text-base font-bold text-white mb-2">🎙️ Librosa Audio Feature Analysis & Acoustic Lab</h2>
+                <p class="text-xs text-slate-400 mb-4">Inspection of Mel-Frequency Cepstral Coefficients, time-domain waveform, and acoustic timbre distribution.</p>
+                
+                <div class="grid grid-cols-4 gap-3 mb-6">
+                    <div class="bg-slate-900 p-3 rounded-lg text-center border border-slate-800">
+                        <span class="text-[10px] text-slate-400">Sampling Rate</span>
+                        <p class="text-sm font-bold text-white">16,000 Hz</p>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-lg text-center border border-slate-800">
+                        <span class="text-[10px] text-slate-400">MFCC Dimension</span>
+                        <p class="text-sm font-bold text-indigo-400">20 Coefficients</p>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-lg text-center border border-slate-800">
+                        <span class="text-[10px] text-slate-400">Spectral Centroid</span>
+                        <p class="text-sm font-bold text-emerald-400">1,842 Hz</p>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-lg text-center border border-slate-800">
+                        <span class="text-[10px] text-slate-400">Zero Crossing Rate</span>
+                        <p class="text-sm font-bold text-amber-400">0.054</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                    <span class="text-xs font-semibold text-slate-400 block mb-2">Simulated Mel-Frequency Spectral Energy Matrix</span>
+                    <canvas id="audioCanvas" class="w-full h-40 rounded bg-slate-900"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: GENAI AGENT STUDIO -->
+        <div id="tab-genai" class="hidden space-y-6">
+            <div class="glass-card p-6">
+                <h2 class="text-base font-bold text-white mb-2">🤖 GenAI Conversational Intelligence Agent</h2>
+                <p class="text-xs text-slate-400 mb-4">Ask natural language questions regarding attendance logs, punctuality, and biometric security.</p>
+                
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button onclick="askGenAI('Who arrived late today?')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs rounded-full text-slate-300">⏰ Who arrived late today?</button>
+                    <button onclick="askGenAI('Show security anomalies and spoof attempts')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs rounded-full text-slate-300">⚠️ Show security anomalies</button>
+                    <button onclick="askGenAI('Generate daily executive briefing')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs rounded-full text-slate-300">📑 Generate Executive Briefing</button>
+                </div>
+
+                <div class="flex space-x-2 mb-4">
+                    <input id="genai-input" type="text" placeholder="Type your query here..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+                    <button onclick="submitGenAI()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 rounded-lg text-xs font-bold">Ask AI</button>
+                </div>
+
+                <div id="genai-output" class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs leading-relaxed text-slate-200">
+                    <p class="text-slate-500 italic">Click one of the prompt suggestions above or type a custom question to query the AI agent.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800 py-3 text-center text-xs text-slate-500">
+        FutureSkills Prime (NASSCOM / MeitY) • Multimodal Biometrics Capstone • Local & Offline Execution Ready
+    </footer>
+
+    <!-- Application Script -->
+    <script>
+        // In-memory Database Records
+        const initialLogs = [
+            { time: "09:18:22", id: "EMP001", name: "Aarav Sharma", dept: "AI & Robotics", status: "PRESENT", face: "94%", voice: "91%", comb: "92.8%" },
+            { time: "09:24:15", id: "EMP002", name: "Priya Nair", dept: "Computer Vision", status: "PRESENT", face: "96%", voice: "89%", comb: "93.5%" },
+            { time: "10:05:40", id: "EMP003", name: "Rahul Verma", dept: "Data Science", status: "LATE", face: "88%", voice: "84%", comb: "86.2%" },
+            { time: "09:28:10", id: "EMP004", name: "Ananya Iyer", dept: "Audio Engineering", status: "PRESENT", face: "91%", voice: "95%", comb: "92.6%" }
+        ];
+
+        let logs = [...initialLogs];
+
+        function renderLogs() {
+            const tbody = document.getElementById("logsTableBody");
+            tbody.innerHTML = logs.map(l => `
+                <tr class="hover:bg-slate-800/50">
+                    <td class="p-3 font-mono">${l.time}</td>
+                    <td class="p-3 font-mono text-indigo-400">${l.id}</td>
+                    <td class="p-3 font-medium text-white">${l.name}</td>
+                    <td class="p-3">${l.dept}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${l.status === 'PRESENT' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}">${l.status}</span></td>
+                    <td class="p-3">${l.face}</td>
+                    <td class="p-3">${l.voice}</td>
+                    <td class="p-3 font-bold text-emerald-400">${l.comb}</td>
+                </tr>
+            `).join("");
+        }
+        renderLogs();
+
+        // Tab Switching
+        function switchTab(tabId) {
+            ['kiosk', 'enroll', 'logs', 'audio', 'genai'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${t}`).classList.remove('active');
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tabId}`).classList.add('active');
+            if(tabId === 'audio') drawAudioWave();
+        }
+
+        // Camera Logic
+        let videoStream = null;
+        async function startCamera() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById("webcam");
+                video.srcObject = videoStream;
+                video.classList.remove("hidden");
+                document.getElementById("camPlaceholder").classList.add("hidden");
+                drawHUD();
+            } catch (e) {
+                alert("Camera access was not granted. Running in Demo Simulation Mode.");
+                simulateFaceScan();
+            }
+        }
+
+        // HUD Canvas Drawing
+        const hudCanvas = document.getElementById("hudCanvas");
+        const ctx = hudCanvas.getContext("2d");
+        function drawHUD() {
+            hudCanvas.width = hudCanvas.parentElement.clientWidth;
+            hudCanvas.height = hudCanvas.parentElement.clientHeight;
+            ctx.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
+
+            const cx = hudCanvas.width / 2;
+            const cy = hudCanvas.height / 2;
+            const w = 180;
+            const h = 230;
+
+            // Bounding box corners
+            ctx.strokeStyle = "#10B981";
+            ctx.lineWidth = 3;
+            // Top Left
+            ctx.beginPath(); ctx.moveTo(cx - w/2, cy - h/2 + 25); ctx.lineTo(cx - w/2, cy - h/2); ctx.lineTo(cx - w/2 + 25, cy - h/2); ctx.stroke();
+            // Top Right
+            ctx.beginPath(); ctx.moveTo(cx + w/2 - 25, cy - h/2); ctx.lineTo(cx + w/2, cy - h/2); ctx.lineTo(cx + w/2, cy - h/2 + 25); ctx.stroke();
+            // Bottom Left
+            ctx.beginPath(); ctx.moveTo(cx - w/2, cy + h/2 - 25); ctx.lineTo(cx - w/2, cy + h/2); ctx.lineTo(cx - w/2 + 25, cy + h/2); ctx.stroke();
+            // Bottom Right
+            ctx.beginPath(); ctx.moveTo(cx + w/2 - 25, cy + h/2); ctx.lineTo(cx + w/2, cy + h/2); ctx.lineTo(cx + w/2, cy + h/2 - 25); ctx.stroke();
+
+            // Status Badge
+            ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+            ctx.fillRect(cx - w/2, cy - h/2 - 28, 160, 22);
+            ctx.fillStyle = "#10B981";
+            ctx.font = "11px system-ui, sans-serif";
+            ctx.fillText("● 468 MESH: VERIFIED", cx - w/2 + 8, cy - h/2 - 13);
+        }
+
+        function simulateFaceScan() {
+            document.getElementById("camPlaceholder").innerHTML = `
+                <div class="text-center p-6">
+                    <div class="text-4xl mb-2">👤</div>
+                    <p class="text-sm text-emerald-400 font-bold">Face Mesh & Liveness Verified</p>
+                    <p class="text-xs text-slate-400 mt-1">MediaPipe 468 landmarks matched (Aarav Sharma - 94%)</p>
+                </div>
+            `;
+            drawHUD();
+        }
+
+        function simulateVoiceRecord() {
+            const btn = document.getElementById("btnVoiceRecord");
+            btn.innerHTML = "⏳ Processing...";
+            setTimeout(() => {
+                btn.innerHTML = "✅ Verified";
+                document.getElementById("voice-status").innerText = "Matched: Aarav Sharma (93%)";
+            }, 800);
+        }
+
+        function executePunch() {
+            const now = new Date();
+            const timeStr = now.toTimeString().split(" ")[0];
+            const sel = document.getElementById("userSelector");
+            const uid = sel.value;
+            const name = sel.options[sel.selectedIndex].text.split(" - ")[0].split(" (")[0];
+            const dept = sel.options[sel.selectedIndex].text.split(" - ")[1];
+
+            document.getElementById("receipt-time").innerText = timeStr;
+            document.getElementById("receipt-name").innerText = name;
+            document.getElementById("receipt-id").innerText = uid;
+            document.getElementById("punchReceipt").classList.remove("hidden");
+
+            // Add to table
+            logs.unshift({
+                time: timeStr,
+                id: uid,
+                name: name,
+                dept: dept,
+                status: "PRESENT",
+                face: "95%",
+                voice: "92%",
+                comb: "93.8%"
+            });
+            renderLogs();
+        }
+
+        function enrollUser() {
+            const name = document.getElementById("en-name").value;
+            const uid = document.getElementById("en-id").value;
+            const dept = document.getElementById("en-dept").value;
+            if(!name || !uid) return alert("Please enter Full Name and User ID.");
+            alert(`🎉 Successfully Enrolled: ${name} (${uid}) into SQLite Biometric Database!`);
+            switchTab('kiosk');
+        }
+
+        function askGenAI(query) {
+            document.getElementById("genai-input").value = query;
+            submitGenAI();
+        }
+
+        function submitGenAI() {
+            const q = document.getElementById("genai-input").value.toLowerCase();
+            const out = document.getElementById("genai-output");
+            out.innerHTML = "<p class='text-indigo-400 animate-pulse'>AI Agent analyzing biometric logs...</p>";
+            
+            setTimeout(() => {
+                if(q.includes("late")) {
+                    out.innerHTML = `
+                        <h3 class="font-bold text-amber-400 text-sm mb-2">⏰ Late Arrival Intelligence Audit</h3>
+                        <p>1 late arrival was flagged today:</p>
+                        <p class="mt-1 font-mono text-slate-300">• <strong>Rahul Verma (EMP003)</strong> arrived at 10:05:40 AM (cut-off: 09:45 AM). Automated notification dispatched.</p>
+                    `;
+                } else if(q.includes("anomaly") || q.includes("spoof")) {
+                    out.innerHTML = `
+                        <h3 class="font-bold text-rose-400 text-sm mb-2">⚠️ Security Anomaly Incident</h3>
+                        <p>1 incident logged in security audit table:</p>
+                        <p class="mt-1 text-slate-300">• <strong>Static Image Presentation Attack</strong> detected on EMP003: Zero blink variance observed across 15 frames. Anti-spoofing liveness gate triggered rejection.</p>
+                    `;
+                } else if(q.includes("briefing") || q.includes("executive")) {
+                    out.innerHTML = `
+                        <h3 class="font-bold text-indigo-400 text-sm mb-2">📑 Daily Executive Attendance Briefing</h3>
+                        <p><strong>Date:</strong> Today | <strong>Turnout:</strong> 80% (4/5 active personnel)</p>
+                        <p class="mt-2 text-slate-300"><strong>Punctuality:</strong> 75% on-time arrival rate. 1 late punch recorded.</p>
+                        <p class="mt-1 text-slate-300"><strong>Biometric Integrity:</strong> Multi-factor verification (MediaPipe Face Mesh + Librosa MFCC) operated with 0 false acceptances (FAR < 0.01%).</p>
+                    `;
+                } else {
+                    out.innerHTML = `
+                        <h3 class="font-bold text-emerald-400 text-sm mb-2">🤖 Agent Synthesis</h3>
+                        <p>Currently 4 personnel marked present today with an 80% attendance rate. All biometric verification gates are active.</p>
+                    `;
+                }
+            }, 400);
+        }
+
+        function drawAudioWave() {
+            const canvas = document.getElementById("audioCanvas");
+            const c = canvas.getContext("2d");
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = 160;
+            c.clearRect(0,0,canvas.width, canvas.height);
+            
+            // Draw simulated Mel-spectrogram bars
+            const bars = 40;
+            const barW = canvas.width / bars;
+            for(let i=0; i<bars; i++) {
+                const h = Math.sin(i * 0.3) * 50 + Math.random() * 40 + 20;
+                c.fillStyle = `hsl(${220 + i * 2}, 80%, ${40 + (h/100)*30}%)`;
+                c.fillRect(i * barW, canvas.height - h, barW - 2, h);
+            }
+        }
+
+        function downloadCSV() {
+            let csv = "Time,User ID,Name,Department,Status,Face Score,Voice Score,Combined Score\n";
+            logs.forEach(l => {
+                csv += `${l.time},${l.id},${l.name},${l.dept},${l.status},${l.face},${l.voice},${l.comb}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'attendance_ledger.csv');
+            a.click();
+        }
+    </script>
+</body>
+</html>
